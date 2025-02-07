@@ -1,0 +1,51 @@
+---
+- name: Deploy Web Servers and Setup Environment
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Install Apache Package
+      apt:
+        name: "{{ apache_package }}"
+        state: present
+        update_cache: yes
+
+    - name: Copy Apache Configuration File
+      copy:
+        src: "{{ apache_config_src }}"
+        dest: "{{ apache_config_dest }}"
+        mode: "0644"
+      notify: Restart Apache Service  # Notify handler instead of restarting immediately
+
+    - name: Install Nginx
+      apt:
+        name: "{{ nginx_package }}"
+        state: present
+        update_cache: yes
+
+    - name: Create Custom Directory
+      file:
+        path: "{{ custom_directory }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create File 1 in Custom Directory
+      copy:
+        content: "This is file 1"
+        dest: "{{ custom_directory }}/{{ custom_files[0] }}"
+        mode: "0644"
+
+    - name: Create File 2 in Custom Directory
+      copy:
+        content: "This is file 2"
+        dest: "{{ custom_directory }}/{{ custom_files[1] }}"
+        mode: "0644"
+
+  handlers:
+    - name: Restart Apache Service
+      service:
+        name: "{{ apache_service }}"
+        state: restarted
+
